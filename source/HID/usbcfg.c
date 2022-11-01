@@ -50,7 +50,7 @@ static const uint8_t hid_device_descriptor_data[18] = {
                          0x00,          /* bDeviceProtocol.                 */
                          0x40,          /* bMaxPacketSize.                  */
                          0x0179,        /* idVendor.                        */
-                         0x0002,        /* idProduct.                       */
+                         0x2105,        /* idProduct.                       */
                          0x0200,        /* bcdDevice.                       */
                          1,             /* iManufacturer.                   */
                          2,             /* iProduct.                        */
@@ -156,7 +156,7 @@ static const uint8_t hid_report_descriptor_data[] = {
   USB_DESC_BYTE (0x26),                 /* Logical Maximum -                */
   USB_DESC_WORD (0x00FF),               /*   255.                           */
   USB_DESC_BYTE (0x75),                 /* Report size -                    */
-  USB_DESC_BYTE (0x08),                 /*   8 bits.                        */
+  USB_DESC_BYTE (0xF0),                 /*   8 bits.                        */
   USB_DESC_BYTE (0x95),                 /* Report count -                   */
   USB_DESC_BYTE (0x01),                 /*   1.                             */
   USB_DESC_BYTE (0x81),                 /* Input -                          */
@@ -169,7 +169,7 @@ static const uint8_t hid_report_descriptor_data[] = {
   USB_DESC_BYTE (0x26),                 /* Logical Maximum -                */
   USB_DESC_WORD (0x00FF),               /*   255.                           */
   USB_DESC_BYTE (0x75),                 /* Report Size -                    */
-  USB_DESC_BYTE (0x08),                 /*   8 bits.                        */
+  USB_DESC_BYTE (0xF0),                 /*   8 bits.                        */
   USB_DESC_BYTE (0x95),                 /* Report Count -                   */
   USB_DESC_BYTE (0x01),                 /*   1.                             */
   USB_DESC_BYTE (0x91),                 /* Output -                         */
@@ -199,18 +199,18 @@ static const uint8_t hid_string0[] = {
  * Vendor string.
  */
 static const uint8_t hid_string1[] = {
-  USB_DESC_BYTE(2+2*7),                 /* bLength.                         */
+  USB_DESC_BYTE(2+2*8),                 /* bLength.                         */
   USB_DESC_BYTE(USB_DESCRIPTOR_STRING), /* bDescriptorType.                 */
-  'N', 0, 'o', 0, 'p', 0, 'e', 0, 'L', 0, 'a', 0, 'b', 0,
+  'G', 0, 'r', 0, 'i', 0, 'd', 0, 'i', 0, 'd', 0, 'e', 0,'a', 0,
 };
 
 /*
  * Device Description string.
  */
 static const uint8_t hid_string2[] = {
-  USB_DESC_BYTE(2+5*2),                 /* bLength.                         */
+  USB_DESC_BYTE(2+9*2),                 /* bLength.                         */
   USB_DESC_BYTE(USB_DESCRIPTOR_STRING), /* bDescriptorType.                 */
-  'C', 0, 'h', 0, 'T', 0, 's', 0, 'y', 0,
+  'O', 0, 'L', 0, 'E', 0, 'D', 0, '-', 0,'D', 0,'i', 0,'s', 0,'p', 0,
 };
 
 /*
@@ -372,9 +372,13 @@ size_t hidGetReport(uint8_t id, uint8_t *bp, size_t n) {
   (void) id;
   (void) n;
 
-  increment_var++;
+//  increment_var++;
   *bp = increment_var;
-  return sizeof(increment_var);
+  for(uint8_t i=0;i<30;i++){
+    *(bp++) = increment_var++;
+  }
+//  return sizeof(increment_var);
+  return 30;
 }
 
 /**

@@ -31,18 +31,37 @@ void oled_disp_init()
   
   ssd1362FillScreen(&ssd1362,0x0);
   
-  char msg[32];
-  
-  sprintf(msg,"Test of Grididea.com.tw\0");
-  ssd1362GotoXy(&ssd1362,0,0);
-  ssd1362Puts(&ssd1362,msg,&ssd1306_font_11x18,0xc);
+//  char msg[32];
+//  
+//  sprintf(msg,"Test of Grididea.com.tw\0");
+//  ssd1362GotoXy(&ssd1362,0,0);
+//  ssd1362Puts(&ssd1362,msg,&ssd1306_font_11x18,0xc);
+//
+//  sprintf(msg,"Test of 112233\0");
+//  ssd1362GotoXy(&ssd1362,0,20);
+//  ssd1362Puts(&ssd1362,msg,&ssd1306_font_11x18,0xc);
+//
+//  sprintf(msg,"Test of 445566\0");
+//  ssd1362GotoXy(&ssd1362,0,40);
+//  ssd1362Puts(&ssd1362,msg,&ssd1306_font_11x18,0xc);
 
-  ssd1362GotoXy(&ssd1362,0,20);
-  ssd1362Puts(&ssd1362,msg,&ssd1306_font_11x18,0xc);
 
-  ssd1362GotoXy(&ssd1362,0,40);
-  ssd1362Puts(&ssd1362,msg,&ssd1306_font_11x18,0xc);
+  ssd1362UpdateScreen(&ssd1362);
+}
 
 
+void oled_write(uint8_t row, uint8_t *msg, uint8_t len)
+{
+  uint8_t szWrite = (len > 23)?23:len; // max 23 characters
+  if(row < 3){
+    ssd1362GotoXy(&ssd1362,0,row*20);
+    ssd1362Puts(&ssd1362,msg,&ssd1306_font_11x18,0xc);
+  }
+  ssd1362UpdateScreen(&ssd1362);
+}
+
+void olde_clear()
+{
+  ssd1362FillScreen(&ssd1362,0x0);
   ssd1362UpdateScreen(&ssd1362);
 }

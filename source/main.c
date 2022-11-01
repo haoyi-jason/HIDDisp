@@ -32,10 +32,10 @@ static const ShellCommand commands[] = {
   {NULL, NULL}
 };
 
-static const ShellConfig shell_cfg1 = {
-  (BaseSequentialStream *)&SDU1,
-  commands
-};
+//static const ShellConfig shell_cfg1 = {
+//  (BaseSequentialStream *)&SDU1,
+//  commands
+//};
 
 static SPIConfig spicfg = {
   false,
@@ -64,16 +64,20 @@ int main()
   halInit();
   chSysInit();
   
-  sduObjectInit(&SDU1);
-  sduStart(&SDU1, &serusbcfg);
+//  sduObjectInit(&SDU1);
+//  sduStart(&SDU1, &serusbcfg);
+  
+  hidObjectInit(&UHD1);
+  hidStart(&UHD1,&usbhidcfg);
   
   
-  usbDisconnectBus(serusbcfg.usbp);
+  usbDisconnectBus(usbhidcfg.usbp);
 //  palClearPad(GPIOA,15);
-//  chThdSleepMilliseconds(1000);
+  chThdSleepMilliseconds(1000);
 //  palSetPad(GPIOA,15);
-  usbStart(serusbcfg.usbp, &usbcfg);
-  usbConnectBus(serusbcfg.usbp);  
+//  usbStart(serusbcfg.usbp, &usbcfg);
+  usbStart(usbhidcfg.usbp, &usbcfg);
+  usbConnectBus(usbhidcfg.usbp);  
   
   palClearPad(GPIOB,9);
   chThdSleepMilliseconds(100);
@@ -88,27 +92,41 @@ int main()
 //  serialTest();
   //canTest();
 //  chThdCreateStatic(waBlink, sizeof(waBlink), NORMALPRIO, procBlink, NULL);
- shellInit();
+// shellInit();
   
-  while(1){
-    if (SDU1.config->usbp->state == USB_ACTIVE) {
-      /* Starting shells.*/
-      if (shelltp1 == NULL) {
-        shelltp1 = chThdCreateFromHeap(NULL, SHELL_WA_SIZE,
-                                       "shell1", NORMALPRIO + 1,
-                                       shellThread, (void *)&shell_cfg1);
-//        shelltp1 = chThdCreateStatic(waShell, sizeof(waShell),NORMALPRIO+1,shellThread,(void*)&shell_cfg1);
+//  while(1){
+//    if (SDU1.config->usbp->state == USB_ACTIVE) {
+//      /* Starting shells.*/
+//      if (shelltp1 == NULL) {
+//        shelltp1 = chThdCreateFromHeap(NULL, SHELL_WA_SIZE,
+//                                       "shell1", NORMALPRIO + 1,
+//                                       shellThread, (void *)&shell_cfg1);
+//      }
+//
+//      /* Waiting for an exit event then freeing terminated shells.*/
+//      chEvtWaitAny(EVENT_MASK(0));
+//      if (chThdTerminatedX(shelltp1)) {
+//        chThdRelease(shelltp1);
+//        shelltp1 = NULL;
+//      }
+//    }
+//    else {
+//      chThdSleepMilliseconds(200);
+//    }
+//  }
+  while(true){
+    if(usbhidcfg.usbp->state == USB_ACTIVE){
+      uint8_t report[64];
+      //size_t n;
+      size_t n = hidGetReport(0, report,  sizeof(report));
+      hidWriteReport(&UHD1,report,n);
+      n = hidReadReportt(&UHD1, report, sizeof(report), TIME_MS2I(10));
+      if(n > 0){
+        //hidSetReport(0,&report,n);
+        report[report[1]+2] = 0x0;
+        oled_write(report[0],&report[2], report[1]);
       }
-
-      /* Waiting for an exit event then freeing terminated shells.*/
-      chEvtWaitAny(EVENT_MASK(0));
-      if (chThdTerminatedX(shelltp1)) {
-        chThdRelease(shelltp1);
-        shelltp1 = NULL;
-      }
-    }
-    else {
-      chThdSleepMilliseconds(200);
+      chThdSleepMilliseconds(50);
     }
   }
   return 0;
