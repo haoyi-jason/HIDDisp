@@ -60,6 +60,21 @@ void oled_write(uint8_t row, uint8_t *msg, uint8_t len)
   ssd1362UpdateScreen(&ssd1362);
 }
 
+void oled_writexy(uint8_t x, uint8_t y, uint8_t *msg, uint8_t len)
+{
+  uint8_t szWrite = (len > 23)?23:len; // max 23 characters
+  
+  if( (x < 256) && (y < 64)){
+    ssd1362GotoXy(&ssd1362,x,y);
+    ssd1362Puts(&ssd1362,msg,&ssd1306_font_11x18,0xc);
+  }
+}
+
+void oled_refersh()
+{
+  ssd1362UpdateScreen(&ssd1362);
+}
+
 void olde_clear()
 {
   ssd1362FillScreen(&ssd1362,0x0);

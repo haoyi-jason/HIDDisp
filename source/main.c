@@ -122,9 +122,15 @@ int main()
       hidWriteReport(&UHD1,report,n);
       n = hidReadReportt(&UHD1, report, sizeof(report), TIME_MS2I(10));
       if(n > 0){
-        //hidSetReport(0,&report,n);
-        report[report[1]+2] = 0x0;
-        oled_write(report[0],&report[2], report[1]);
+        if(report[0] == 0xff){
+          oled_refersh();
+        }
+        else{
+          //hidSetReport(0,&report,n);
+          report[report[2]+2] = 0x0;
+          //oled_write(report[0],&report[2], report[1]);
+          oled_writexy(report[0],report[1],&report[3],report[2]);
+        }
       }
       chThdSleepMilliseconds(50);
     }
