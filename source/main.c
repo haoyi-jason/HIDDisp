@@ -7,6 +7,41 @@
 
 #define SHELL_WA_SIZE   THD_WORKING_AREA_SIZE(2048)
 
+typedef struct{
+  uint32_t dummy;
+  int16_t x;
+  int16_t y;
+  uint16_t sw;
+}_joystick_packet_t;
+
+/* On-Chip ADC Section */
+#define ADC_GRP1_NUM_CHANNELS   4 // PA0~3
+#define ADC_GRP1_BUF_DEPTH      8
+static void adccallback(ADCDriver *adcp)
+{
+//  while(1);
+}
+
+static void adcerror(ADCDriver *adcp, adcerror_t err)
+{
+//  while(1);
+}
+static adcsample_t samples[ADC_GRP1_NUM_CHANNELS*ADC_GRP1_BUF_DEPTH];
+static const ADCConversionGroup adcgrpcfg = {
+  TRUE,
+  ADC_GRP1_NUM_CHANNELS,
+  adccallback,
+  adcerror,
+  0,
+  ADC_CR2_SWSTART , //| ADC_CR2_EXSEL_0 | ADC_CR2_EXSEL_1 | ADC_CR2_EXSEL_2,
+  0,
+  ADC_SMPR2_SMP_AN0(ADC_SAMPLE_239P5) | ADC_SMPR2_SMP_AN1(ADC_SAMPLE_239P5) | ADC_SMPR2_SMP_AN2(ADC_SAMPLE_239P5) | ADC_SMPR2_SMP_AN3(ADC_SAMPLE_239P5),
+  ADC_SQR1_NUM_CH(ADC_GRP1_NUM_CHANNELS),
+  0,
+  ADC_SQR3_SQ1_N(ADC_CHANNEL_IN0) | ADC_SQR3_SQ2_N(ADC_CHANNEL_IN1) | ADC_SQR3_SQ3_N(ADC_CHANNEL_IN2) | ADC_SQR3_SQ4_N(ADC_CHANNEL_IN3)
+};
+
+
 static void cmd_write(BaseSequentialStream *chp, int argc, char *argv[]) 
 {
 
@@ -58,14 +93,83 @@ static THD_FUNCTION(procBlink, arg)
   }
 }
 
+#define MMIO16(addr)    (*(volatile uint16_t*)(addr))
+#define UID_ADDR        0x1fffF7e8
+#define UUID            ((uint8_t*)UID_ADDR)
+
+#define LINE_L  PAL_LINE(GPIOB,0)
+#define LINE_R  PAL_LINE(GPIOB,1)
+#define LINE_U  PAL_LINE(GPIOB,2)
+#define LINE_D  PAL_LINE(GPIOB,10)
+#define LINE_N  PAL_LINE(GPIOB,11)
+
+#define EV_LINE_L       EVENT_MASK(0)
+#define EV_LINE_R       EVENT_MASK(1)
+#define EV_LINE_U       EVENT_MASK(2)
+#define EV_LINE_D       EVENT_MASK(3)
+#define EV_LINE_N       EVENT_MASK(4)
+
+static bool clicked = false;
+
+
+void readChipID(uint8_t *buffer)
+{
+  for(uint8_t i=0;i<12;i++){
+    uint16_t id = MMIO16(UID_ADDR + i*2);
+    buffer[i] = UUID[i];
+  }
+}
+
+static void line_isr(void *arg)
+{
+  chSysLockFromISR();
+  clicked = true;
+  chSysUnlockFromISR();
+}
+
 int main()
 {
-  thread_t *shelltp1 = NULL;
+  thread_t *shelltp1 = NULL;  
   halInit();
   chSysInit();
   
+  uint8_t report[64];
+  uint8_t packet[64];
+  _joystick_packet_t *joy = (_joystick_packet_t*)packet;
+  
+//  while(true){
+//    chThdSleepMilliseconds(10);
+//  }
+  
+  uint8_t chipId[12];
+  uint16_t uid;
+  
+  readChipID(chipId);
+  
+  uid = (chipId[1] << 8) | chipId[0];
+  
+  uint8_t str[8];
+  chsnprintf(str,16,"%08d",uid);
+  
+  for(uint8_t i=0;i<8;i++){
+    hid_string3[2 + i*2] = str[i];
+    hid_string3[3 + i*2] = 0x0;
+  }
+
 //  sduObjectInit(&SDU1);
 //  sduStart(&SDU1, &serusbcfg);
+  
+  palSetLineCallback(LINE_L, line_isr,NULL);
+  palSetLineCallback(LINE_R, line_isr,NULL);
+  palSetLineCallback(LINE_U, line_isr,NULL);
+  palSetLineCallback(LINE_D, line_isr,NULL);
+  palSetLineCallback(LINE_N, line_isr,NULL);
+  
+  palEnableLineEvent(LINE_L, PAL_EVENT_MODE_FALLING_EDGE);
+  palEnableLineEvent(LINE_R, PAL_EVENT_MODE_FALLING_EDGE);
+  palEnableLineEvent(LINE_U, PAL_EVENT_MODE_FALLING_EDGE);
+  palEnableLineEvent(LINE_D, PAL_EVENT_MODE_FALLING_EDGE);
+  palEnableLineEvent(LINE_N, PAL_EVENT_MODE_FALLING_EDGE);
   
   hidObjectInit(&UHD1);
   hidStart(&UHD1,&usbhidcfg);
@@ -114,16 +218,31 @@ int main()
 //      chThdSleepMilliseconds(200);
 //    }
 //  }
+  for(uint8_t i=0;i<64;i++){
+    packet[i] = i +1;
+  }
+  
+
+  adcStart(&ADCD1,NULL);
+  adcStartConversion(&ADCD1,&adcgrpcfg,samples,ADC_GRP1_BUF_DEPTH);
+  ADCD1.adc->CR2 |= 0x0;
+
   while(true){
+    //adcStartConversion(&ADCD1,&adcgrpcfg,samples,ADC_GRP1_BUF_DEPTH);
     if(usbhidcfg.usbp->state == USB_ACTIVE){
-      uint8_t report[64];
-      //size_t n;
       size_t n = hidGetReport(0, report,  sizeof(report));
       hidWriteReport(&UHD1,report,n);
       n = hidReadReportt(&UHD1, report, sizeof(report), TIME_MS2I(10));
       if(n > 0){
         if(report[0] == 0xff){
           oled_refersh();
+        }
+        else if(report[0] == 0xAA){
+          n = hidGetReport(0,report,sizeof(report));
+          joy = (_joystick_packet_t*)report;
+          joy->x = samples[2];
+          joy->y = samples[2];
+          hidWriteReport(&UHD1,report,sizeof(report));
         }
         else{
           //hidSetReport(0,&report,n);
@@ -132,8 +251,24 @@ int main()
           oled_writexy(report[0],report[1],&report[3],report[2]);
         }
       }
-      chThdSleepMilliseconds(50);
+      if(clicked){
+        clicked = false;
+        for(uint8_t i=0;i<10;i++){
+          hidWriteReport(&UHD1,packet,64);
+          chThdSleepMilliseconds(10);
+        }
+      }
+//      if(report[0] == 0x00){
+//        report[0] = 0x1;
+//        hidWriteReport(&UHD1,report,3);
+//      }
+//      else{
+//        report[0] = 0x0;
+//        hidWriteReport(&UHD1,report,3);
+//      }
+      
     }
+      chThdSleepMilliseconds(100);
   }
   return 0;
 }

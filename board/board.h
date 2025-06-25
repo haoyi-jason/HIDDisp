@@ -116,11 +116,11 @@
 /*
  * Port A setup.
  */
-#define VAL_GPIOACRL    (PIN_ANALOG(0)    | /* NTC */  \
-                         PIN_ANALOG(1)    | /* NTC */  \
-                         PIN_ALTERNATE_PP_50(2)   | /* SMU_CPOH        */  \
-                         PIN_OUTPUT_PP_50(3)           | /* Not Used         */  \
-                         PIN_OUTPUT_PP_50(4)    | /* SPI1_CS */            \
+#define VAL_GPIOACRL    (PIN_ANALOG(0)          | /* NTC */  \
+                         PIN_ANALOG(1)          | /* NTC */  \
+                         PIN_ANALOG(2)          | /* X */  \
+                         PIN_ANALOG(3)          | /* Y */  \
+                         PIN_INPUT_PUD(4)       | /* SW */            \
                          PIN_ALTERNATE_PP_50(5) | /* SPI1_SCK.          */  \
                          PIN_ALTERNATE_PP_50(6)           | /* SPI1_MISO.         */  \
                          PIN_ALTERNATE_PP_50(7))  /* SPI1_MOSI.         */
@@ -137,8 +137,8 @@
 /*
  * Port B setup.
  */
-#define VAL_GPIOBCRL    (PIN_OUTPUT_PP_2(0)    | /* SmartCard_3/5V.    */  \
-                         PIN_OUTPUT_PP_2(1)       | /* Unconnected.       */  \
+#define VAL_GPIOBCRL    (PIN_INPUT_PUD(0)    | /* SmartCard_3/5V.    */  \
+                         PIN_INPUT_PUD(1)       | /* Unconnected.       */  \
                          PIN_INPUT_PUD(2)    | /* SPI1_CS.           */  \
                          PIN_OUTPUT_PP_2(3)           | /* TDO.               */  \
                          PIN_INPUT_PUD(4)           | /* TRST.              */  \
@@ -147,8 +147,8 @@
                          PIN_ALTERNATE_OD_10(7))  /* I2C1_SDA.          */
 #define VAL_GPIOBCRH    (PIN_INPUT_PUD(8)           | /* CAN_RX.            */  \
                          PIN_OUTPUT_PP_2(9) | /* SSD1362 RES            */  \
-                         PIN_ALTERNATE_PP_50(10)| /* SmartCard IO.      */  \
-                         PIN_OUTPUT_PP_2(11)|           /* SPI2.CS     */  \
+                         PIN_INPUT_PUD(10)| /* SmartCard IO.      */  \
+                         PIN_INPUT_PUD(11)|           /* SPI2.CS     */  \
                          PIN_OUTPUT_PP_2(12)|           /* SPI2.CLK     */  \
                          PIN_ALTERNATE_PP_50(13)|       /* SPI2.MOSI */                    \
                          PIN_ALTERNATE_PP_50(14)|       /* SPI2.MISO.    */  \

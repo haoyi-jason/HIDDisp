@@ -87,13 +87,13 @@ static const uint8_t hid_configuration_descriptor_data[41] = {
                          0xC0,          /* bmAttributes (self powered).     */
                          50),           /* bMaxPower (100mA).               */
   /* Interface Descriptor.*/
-  USB_DESC_INTERFACE    (0x00,          /* bInterfaceNumber.                */
+  USB_DESC_INTERFACE    (0x01,          /* bInterfaceNumber.                */
                          0x00,          /* bAlternateSetting.               */
                          0x02,          /* bNumEndpoints.                   */
                          0x03,          /* bInterfaceClass (HID Interface
                                            Class).                          */
-                         0x00,          /* bInterfaceSubClass (None).       */
-                         0x00,          /* bInterfaceProtocol (None).       */
+                         0x01,          /* bInterfaceSubClass (None).       */
+                         0x02,          /* bInterfaceProtocol (None).       */
                          0),            /* iInterface.                      */
   /* HID Descriptor.*/
   USB_DESC_HID          (0x0110,        /* bcdHID.                          */
@@ -101,19 +101,54 @@ static const uint8_t hid_configuration_descriptor_data[41] = {
                          0x01,          /* bNumDescriptors.                 */
                          0x22,          /* bDescriptorType (Report
                                            Descriptor).                     */
-                         34),           /* wDescriptorLength.               */
+                         50),           /* wDescriptorLength.               */
   /* Endpoint 1 Descriptor.*/
   USB_DESC_ENDPOINT     (USBD1_DATA_AVAILABLE_EP,       /* bEndpointAddress.*/
                          0x03,          /* bmAttributes (Interrupt).        */
-                         0x0040,        /* wMaxPacketSize.                  */
+                         0x0008,        /* wMaxPacketSize.                  */
                          0x0A),         /* bInterval (10ms).                */
   /* Endpoint 1 Descriptor.*/
   USB_DESC_ENDPOINT     (USBD1_DATA_REQUEST_EP|0x80,    /* bEndpointAddress.*/
                          0x03,          /* bmAttributes (Interrupt).        */
-                         0x0040,        /* wMaxPacketSize.                  */
+                         0x0008,        /* wMaxPacketSize.                  */
                          0x0A)          /* bInterval (10ms).                */
 };
 
+//static const uint8_t hid_configuration_descriptor_data[41] = {
+//  /* Configuration Descriptor.*/
+//  USB_DESC_CONFIGURATION(41,            /* wTotalLength.                    */
+//                         0x01,          /* bNumInterfaces.                  */
+//                         0x01,          /* bConfigurationValue.             */
+//                         0,             /* iConfiguration.                  */
+//                         0xC0,          /* bmAttributes (self powered).     */
+//                         50),           /* bMaxPower (100mA).               */
+//  /* Interface Descriptor.*/
+//  USB_DESC_INTERFACE    (0x00,          /* bInterfaceNumber.                */
+//                         0x00,          /* bAlternateSetting.               */
+//                         0x02,          /* bNumEndpoints.                   */
+//                         0x03,          /* bInterfaceClass (HID Interface
+//                                           Class).                          */
+//                         0x00,          /* bInterfaceSubClass (None).       */
+//                         0x00,          /* bInterfaceProtocol (None).       */
+//                         0),            /* iInterface.                      */
+//  /* HID Descriptor.*/
+//  USB_DESC_HID          (0x0110,        /* bcdHID.                          */
+//                         0x00,          /* bCountryCode.                    */
+//                         0x01,          /* bNumDescriptors.                 */
+//                         0x22,          /* bDescriptorType (Report
+//                                           Descriptor).                     */
+//                         34),           /* wDescriptorLength.               */
+//  /* Endpoint 1 Descriptor.*/
+//  USB_DESC_ENDPOINT     (USBD1_DATA_AVAILABLE_EP,       /* bEndpointAddress.*/
+//                         0x03,          /* bmAttributes (Interrupt).        */
+//                         0x0040,        /* wMaxPacketSize.                  */
+//                         0x0A),         /* bInterval (10ms).                */
+//  /* Endpoint 1 Descriptor.*/
+//  USB_DESC_ENDPOINT     (USBD1_DATA_REQUEST_EP|0x80,    /* bEndpointAddress.*/
+//                         0x03,          /* bmAttributes (Interrupt).        */
+//                         0x0040,        /* wMaxPacketSize.                  */
+//                         0x0A)          /* bInterval (10ms).                */
+//};
 /*
  * Configuration Descriptor wrapper.
  */
@@ -178,10 +213,45 @@ static const uint8_t hid_report_descriptor_data[] = {
   USB_DESC_BYTE (0xC0)                  /* End Collection.                  */
 };
 
+/* HID Mouse descriptor */
+static const uint8_t hid_report_descriptor_mouse[50] = {
+    0x05, 0x01,                    // USAGE_PAGE (Generic Desktop)
+    0x09, 0x02,                    // USAGE (Mouse)
+    0xa1, 0x01,                    // COLLECTION (Application)
+    0x09, 0x01,                    //   USAGE (Pointer)
+    0xa1, 0x00,                    //   COLLECTION (Physical)
+    0x05, 0x09,                    //     USAGE_PAGE (Button)
+    0x19, 0x01,                    //     USAGE_MINIMUM (Button 1)
+    0x29, 0x03,                    //     USAGE_MAXIMUM (Button 3)
+    0x15, 0x00,                    //     LOGICAL_MINIMUM (0)
+    0x25, 0x01,                    //     LOGICAL_MAXIMUM (1)
+    0x95, 0x03,                    //     REPORT_COUNT (3)
+    0x75, 0x01,                    //     REPORT_SIZE (1)
+    0x81, 0x02,                    //     INPUT (Data,Var,Abs)
+    0x95, 0x01,                    //     REPORT_COUNT (1)
+    0x75, 0x05,                    //     REPORT_SIZE (5)
+    0x81, 0x03,                    //     INPUT (Cnst,Var,Abs)
+    0x05, 0x01,                    //     USAGE_PAGE (Generic Desktop)
+    0x09, 0x30,                    //     USAGE (X)
+    0x09, 0x31,                    //     USAGE (Y)
+    0x15, 0x81,                    //     LOGICAL_MINIMUM (-127)
+    0x25, 0x7f,                    //     LOGICAL_MAXIMUM (127)
+    0x75, 0x08,                    //     REPORT_SIZE (8)
+    0x95, 0x02,                    //     REPORT_COUNT (2)
+    0x81, 0x06,                    //     INPUT (Data,Var,Rel)
+    0xc0,                          //   END_COLLECTION
+    0xc0                           // END_COLLECTION
+};
+
 /*
  * HID Report Descriptor wrapper
  */
 static const USBDescriptor hid_report_descriptor = {
+  sizeof hid_report_descriptor_data,
+  hid_report_descriptor_mouse
+};
+
+static const USBDescriptor hid_report_descriptor2 = {
   sizeof hid_report_descriptor_data,
   hid_report_descriptor_data
 };
@@ -216,10 +286,15 @@ static const uint8_t hid_string2[] = {
 /*
  * Serial Number string.
  */
-static const uint8_t hid_string3[] = {
-  USB_DESC_BYTE(2+2*3),                 /* bLength.                         */
+uint8_t hid_string3[] = {
+  USB_DESC_BYTE(2+2*8),                 /* bLength.                         */
   USB_DESC_BYTE(USB_DESCRIPTOR_STRING), /* bDescriptorType.                 */
   '0' + CH_KERNEL_MAJOR, 0,
+  '0' + CH_KERNEL_MINOR, 0,
+  '0' + CH_KERNEL_MINOR, 0,
+  '0' + CH_KERNEL_MINOR, 0,
+  '0' + CH_KERNEL_MINOR, 0,
+  '0' + CH_KERNEL_MINOR, 0,
   '0' + CH_KERNEL_MINOR, 0,
   '0' + CH_KERNEL_PATCH, 0
 };

@@ -31,6 +31,8 @@ extern const USBConfig usbcfg;
 extern const USBHIDConfig usbhidcfg;
 extern USBHIDDriver UHD1;
 
+extern uint8_t hid_string3[];
+
 #ifdef __cplusplus
 extern "C" {
 #endif
